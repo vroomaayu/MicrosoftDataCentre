@@ -1,0 +1,738 @@
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sustainable DC Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Custom styles for dashboard layout */
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 1.5rem;
+            background-color: #ffffff;
+            border-radius: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .control-panel, .metrics-panel {
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            background-color: #f8fafc; /* Light gray background */
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .control-panel h2, .metrics-panel h3 {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1.25rem;
+            color: #0f172a; /* Slate 900 */
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 1rem;
+        }
+
+        .control-group label {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: #334155; /* Slate 700 */
+        }
+
+        .control-group input[type="range"] {
+            width: 100%;
+        }
+
+        .control-group span {
+            font-size: 0.9rem;
+            color: #64748b; /* Slate 500 */
+            text-align: right;
+            margin-top: 0.25rem;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .metric-card {
+            background-color: #ffffff;
+            padding: 1.25rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e2e8f0; /* Border */
+        }
+
+        .metric-card h4 {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 0.75rem;
+            color: #1e293b; /* Slate 800 */
+        }
+
+        .metric-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #0ea5e9; /* Sky 500 */
+        }
+
+        .metric-description {
+            font-size: 0.9rem;
+            color: #64748b; /* Slate 500 */
+            margin-top: 0.5rem;
+        }
+
+        .chart-container {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background-color: #ffffff;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e2e8f0; /* Border */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+
+    <div class="dashboard-container">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">Sustainable DC Efficiency Dashboard</h1>
+        <p class="text-center text-gray-600 mb-8">Simulate conditions to see the impact of SEAR, AARI, IPTS, and Global Optimization!</p>
+
+        <div class="control-panel">
+            <h2>Simulation Controls</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="control-group">
+                    <label for="itLoad">IT Load:</label>
+                    <input type="range" id="itLoad" min="0" max="100" value="60">
+                    <span id="itLoadValue">60%</span>
+                </div>
+                 <div class="control-group">
+                    <label for="globalOptInfluence">Global Opt. Influence:</label>
+                    <input type="range" id="globalOptInfluence" min="0" max="100" value="80">
+                    <span id="globalOptInfluenceValue">80%</span>
+                </div>
+                <div class="control-group">
+                    <label for="humidity">Ambient Humidity:</label>
+                    <input type="range" id="humidity" min="0" max="100" value="50">
+                    <span id="humidityValue">50%</span>
+                </div>
+                <div class="control-group">
+                    <label for="ambientTemp">Ambient Temp (°C):</label>
+                    <input type="range" id="ambientTemp" min="-10" max="40" value="25">
+                    <span id="ambientTempValue">25°C</span>
+                </div>
+                <div class="control-group">
+                    <label for="partnerColdSupply">SEAR Waste Cold Supply:</label>
+                    <input type="range" id="partnerColdSupply" min="0" max="100" value="70">
+                    <span id="partnerColdSupplyValue">70%</span>
+                </div>
+                <div class="control-group">
+                    <label for="partnerHeatDemand">SEAR Waste Heat Demand:</label>
+                    <input type="range" id="partnerHeatDemand" min="0" max="100" value="60">
+                    <span id="partnerHeatDemandValue">60%</span>
+                </div>
+                 <div class="control-group">
+                    <label for="renewableAvailability">Local Renewable Avail.:</label>
+                    <input type="range" id="renewableAvailability" min="0" max="100" value="50">
+                    <span id="renewableAvailabilityValue">50%</span>
+                </div>
+                 <div class="control-group">
+                    <label for="iptsEfficiency">IPTS Efficiency (% Loss Reduction):</label>
+                    <input type="range" id="iptsEfficiency" min="0" max="10" value="5">
+                    <span id="iptsEfficiencyValue">5%</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="metrics-panel">
+            <h3>Simulated Performance Metrics (Hybrid DC)</h3>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h4>Simulated PUE</h4>
+                    <div class="metric-value" id="simulatedPUE">--</div>
+                    <p class="metric-description">Power Usage Effectiveness (lower is better).</p>
+                </div>
+                 <div class="metric-card">
+                    <h4>Simulated Net Grid Energy</h4>
+                    <div class="metric-value" id="simulatedNetGridEnergy">--</div>
+                    <p class="metric-description">Estimated energy drawn from the grid (relative units).</p>
+                </div>
+                 <div class="metric-card">
+                    <h4>Simulated Water Usage</h4>
+                    <div class="metric-value" id="simulatedWaterUsage">--</div>
+                    <p class="metric-description">Estimated water consumption for cooling (relative units).</p>
+                </div>
+                 <div class="metric-card">
+                    <h4>Simulated Carbon Intensity</h4>
+                    <div class="metric-value" id="simulatedCarbonIntensity">--</div>
+                    <p class="metric-description">Estimated carbon footprint (relative units/energy).</p>
+                </div>
+                 <div class="metric-card">
+                    <h4>AARI Cooling Mode</h4>
+                    <div class="metric-value text-lg" id="aariCoolingMode">--</div>
+                    <p class="metric-description">The primary cooling strategy based on conditions.</p>
+                </div>
+                <div class="metric-card">
+                    <h4>Global Opt. Routing</h4>
+                    <div class="metric-value text-lg" id="globalOptRouting">--</div>
+                    <p class="metric-description">AI's decision on workload placement.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-container">
+             <h3>Before vs After: Total Energy Consumption</h3>
+             <canvas id="energyComparisonChart"></canvas>
+        </div>
+         <div class="chart-container">
+             <h3>Before vs After: Total Operational Cost</h3>
+             <canvas id="costComparisonChart"></canvas>
+        </div>
+         <div class="chart-container">
+             <h3>Before vs After: Total Water Usage</h3>
+             <canvas id="waterComparisonChart"></canvas>
+        </div>
+         <div class="chart-container">
+             <h3>Before vs After: Total Carbon Emissions</h3>
+             <canvas id="carbonComparisonChart"></canvas>
+        </div>
+        <div class="chart-container">
+             <h3>Hybrid DC: Energy Source Mix</h3>
+             <canvas id="energyMixChart"></canvas>
+        </div>
+         <div class="chart-container">
+             <h3>Hybrid DC: Cooling Energy Breakdown</h3>
+             <canvas id="coolingBreakdownChart"></canvas>
+        </div>
+
+    </div>
+
+    <script>
+        // --- Simulation Constants (Based on Research & Predictions) ---
+        const CONSTANTS = {
+            BASE_IT_POWER_PER_LOAD: 100, // kW at 100% IT load for a reference unit
+            TRAD_COOLING_PERCENT_OF_IT: 0.4, // Traditional cooling is ~40% of IT power
+            TRAD_OTHER_PERCENT_OF_IT: 0.15, // Traditional other losses ~15% of IT power
+            TRAD_WUE_BASELINE: 1.8, // Liters per kWh IT for traditional cooling towers
+
+            // Hybrid System Potential Factors (0 to 1, representing max potential reduction/contribution)
+            IPTS_MAX_LOSS_REDUCTION: 0.08, // IPTS can reduce total losses (Other category) by up to 8%
+            AARI_AWH_MAX_YIELD_FACTOR: 0.6, // Max AWH yield factor (relative to potential need)
+            AARI_EVAP_ENERGY_FACTOR: 0.3, // Evaporative cooling uses ~30% of chiller energy
+            AARI_DEHUM_ENERGY_FACTOR: 0.2, // Energy cost for dehumidification relative to cooling load
+            AARI_FREE_COOLING_FACTOR: 0.1, // Free cooling uses ~10% of chiller energy
+            SEAR_COLD_MAX_SAVING_FACTOR: 0.95, // Max 95% reduction in chiller energy from waste cold
+            SEAR_HEAT_EXPORT_VALUE_FACTOR: 0.4, // Relative value of exported heat (offsets cooling energy cost)
+            RENEWABLE_MAX_POWER_FACTOR: 1.2, // Can generate up to 120% of max IT load
+
+            // Global Optimization Potential Savings (0 to 1, representing max fleet-level savings at 100% influence)
+            GO_MAX_ENERGY_SAVING: 0.15, // Max 15% fleet-level energy saving
+            GO_MAX_WATER_SAVING: 0.30, // Max 30% fleet-level water saving
+            GO_MAX_CARBON_SAVING: 0.20, // Max 20% fleet-level carbon saving
+
+            // Cost & Carbon Factors (Representative values)
+            ELECTRICITY_COST_PER_KWH: 7, // ₹ per kWh (Based on India industrial rates)
+            WATER_COST_PER_LITER: 0.1, // ₹ per Liter (Based on India industrial rates, 100 ₹/kL)
+            GRID_CARBON_INTENSITY: 0.82, // kgCO2/kWh (Based on India average)
+            RENEWABLE_CARBON_INTENSITY: 0.05, // kgCO2/kWh (Lifecycle emissions)
+            WASTE_CARBON_FACTOR: -0.3, // kgCO2/kWh (Represents avoided emissions from waste use)
+        };
+
+
+        // --- Simulation State ---
+        let simulationState = {
+            itLoad: 0.6, // 0 to 1
+            globalOptInfluence: 0.8, // 0 to 1
+            humidity: 0.5, // 0 to 1
+            ambientTemp: 25, // °C
+            partnerColdSupply: 0.7, // 0 to 1
+            partnerHeatDemand: 0.6, // 0 to 1
+            renewableAvailability: 0.5, // 0 to 1
+            iptsEfficiency: 0.05, // 0 to 0.1 (5%)
+            aariCoolingMode: '--',
+            globalOptRouting: '--'
+        };
+
+        // --- DOM Elements ---
+        const sliders = {
+            itLoad: document.getElementById('itLoad'),
+            globalOptInfluence: document.getElementById('globalOptInfluence'),
+            humidity: document.getElementById('humidity'),
+            ambientTemp: document.getElementById('ambientTemp'),
+            partnerColdSupply: document.getElementById('partnerColdSupply'),
+            partnerHeatDemand: document.getElementById('partnerHeatDemand'),
+            renewableAvailability: document.getElementById('renewableAvailability'),
+            iptsEfficiency: document.getElementById('iptsEfficiency')
+        };
+
+        const valueSpans = {
+            itLoad: document.getElementById('itLoadValue'),
+            globalOptInfluence: document.getElementById('globalOptInfluenceValue'),
+            humidity: document.getElementById('humidityValue'),
+            ambientTemp: document.getElementById('ambientTempValue'),
+            partnerColdSupply: document.getElementById('partnerColdSupplyValue'),
+            partnerHeatDemand: document.getElementById('partnerHeatDemandValue'),
+            renewableAvailability: document.getElementById('renewableAvailabilityValue'),
+            iptsEfficiency: document.getElementById('iptsEfficiencyValue')
+        };
+
+        const metricElements = {
+            simulatedPUE: document.getElementById('simulatedPUE'),
+            simulatedNetGridEnergy: document.getElementById('simulatedNetGridEnergy'),
+            simulatedWaterUsage: document.getElementById('simulatedWaterUsage'),
+            simulatedCarbonIntensity: document.getElementById('simulatedCarbonIntensity'),
+            aariCoolingMode: document.getElementById('aariCoolingMode'),
+            globalOptRouting: document.getElementById('globalOptRouting')
+        };
+
+        // --- Chart Setup ---
+        let energyComparisonChart;
+        let costComparisonChart;
+        let waterComparisonChart;
+        let carbonComparisonChart;
+        let energyMixChart;
+        let coolingBreakdownChart;
+
+
+        function initializeCharts() {
+            const chartOptions = {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'top' },
+                    title: { display: false }, // Use h3 tag
+                },
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            };
+
+            const comparisonChartOptions = {
+                 ...chartOptions,
+                 scales: {
+                     y: {
+                         beginAtZero: true,
+                         title: { display: true, text: 'Relative Units' }
+                     },
+                     x: {
+                         grid: { display: false }
+                     }
+                 }
+            };
+
+            // Before vs After Charts
+            const energyCtx = document.getElementById('energyComparisonChart').getContext('2d');
+            energyComparisonChart = new Chart(energyCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Traditional DC', 'Hybrid DC'],
+                    datasets: [{
+                        label: 'Total Energy Consumption',
+                        data: [0, 0],
+                        backgroundColor: ['#64748b', '#0ea5e9'], // Slate, Sky
+                    }]
+                },
+                options: comparisonChartOptions
+            });
+
+             const costCtx = document.getElementById('costComparisonChart').getContext('2d');
+             costComparisonChart = new Chart(costCtx, {
+                 type: 'bar',
+                 data: {
+                     labels: ['Traditional DC', 'Hybrid DC'],
+                     datasets: [{
+                         label: 'Total Operational Cost',
+                         data: [0, 0],
+                         backgroundColor: ['#64748b', '#10b981'], // Slate, Emerald
+                     }]
+                 },
+                 options: comparisonChartOptions
+             });
+
+             const waterCtx = document.getElementById('waterComparisonChart').getContext('2d');
+             waterComparisonChart = new Chart(waterCtx, {
+                 type: 'bar',
+                 data: {
+                     labels: ['Traditional DC', 'Hybrid DC'],
+                     datasets: [{
+                         label: 'Total Water Usage',
+                         data: [0, 0],
+                         backgroundColor: ['#64748b', '#3b82f6'], // Slate, Blue
+                     }]
+                 },
+                 options: comparisonChartOptions
+             });
+
+             const carbonCtx = document.getElementById('carbonComparisonChart').getContext('2d');
+             carbonComparisonChart = new Chart(carbonCtx, {
+                 type: 'bar',
+                 data: {
+                     labels: ['Traditional DC', 'Hybrid DC'],
+                     datasets: [{
+                         label: 'Total Carbon Emissions',
+                         data: [0, 0],
+                         backgroundColor: ['#64748b', '#a855f7'], // Slate, Violet
+                     }]
+                 },
+                 options: comparisonChartOptions
+             });
+
+
+            // Hybrid Specific Charts
+            const energyMixCtx = document.getElementById('energyMixChart').getContext('2d');
+            energyMixChart = new Chart(energyMixCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Renewable', 'Grid', 'Waste Cold (Cooling)', 'Waste Heat (Export Value)'],
+                    datasets: [{
+                        data: [0, 0, 0, 0], // Initial data
+                        backgroundColor: ['#10b981', '#6366f1', '#0ea5e9', '#f97316'], // Green, Indigo, Sky, Orange
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'top' },
+                        title: { display: false },
+                        tooltip: {
+                             callbacks: {
+                                 label: function(context) {
+                                     let label = context.label || '';
+                                     if (label) {
+                                         label += ': ';
+                                     }
+                                     if (context.parsed !== null) {
+                                         label += context.parsed.toFixed(1) + '%';
+                                     }
+                                     return label;
+                                 }
+                             }
+                        }
+                    }
+                }
+            });
+
+             const coolingBreakdownCtx = document.getElementById('coolingBreakdownChart').getContext('2d');
+             coolingBreakdownChart = new Chart(coolingBreakdownCtx, {
+                 type: 'bar',
+                 data: {
+                     labels: ['Base Cooling Need', 'Waste Cold Contrib.', 'AARI Contrib.', 'Heat Export Benefit'],
+                     datasets: [{
+                         label: 'Relative Energy Contribution/Reduction',
+                         data: [100, 0, 0, 0], // Base need is 100%, contributions reduce it
+                         backgroundColor: ['#e2e8f0', '#0ea5e9', '#22d3ee', '#f97316'], // Grey, Sky, Cyan, Orange
+                     }]
+                 },
+                 options: {
+                     responsive: true,
+                     plugins: {
+                         legend: { display: false },
+                         title: { display: false },
+                         tooltip: {
+                             callbacks: {
+                                 label: function(context) {
+                                     let label = context.dataset.label || '';
+                                     if (label) {
+                                         label += ': ';
+                                     }
+                                     if (context.parsed.y !== null) {
+                                         label += context.parsed.y.toFixed(1); // Display raw value
+                                     }
+                                     return label;
+                                 }
+                             }
+                         }
+                     },
+                     scales: {
+                         y: {
+                             beginAtZero: true,
+                             title: {
+                                 display: true,
+                                 text: 'Relative Energy Contribution/Reduction'
+                             }
+                         }
+                     }
+                 }
+             });
+        }
+
+
+        // --- Simulation Logic ---
+
+        // Calculate metrics for Traditional DC
+        function calculateTraditionalMetrics(state) {
+            const itPower = CONSTANTS.BASE_IT_POWER_PER_LOAD * state.itLoad;
+            const coolingPower = itPower * CONSTANTS.TRAD_COOLING_PERCENT_OF_IT;
+            const otherPower = itPower * CONSTANTS.TRAD_OTHER_PERCENT_OF_IT;
+            const totalPower = itPower + coolingPower + otherPower;
+            const pue = totalPower / itPower;
+            const waterUsage = itPower * CONSTANTS.TRAD_WUE_BASELINE; // WUE is per IT kWh
+
+            const energyCost = totalPower * CONSTANTS.ELECTRICITY_COST_PER_KWH;
+            const waterCost = waterUsage * CONSTANTS.WATER_COST_PER_LITER;
+            const totalCost = energyCost + waterCost;
+
+            const carbonEmissions = totalPower * CONSTANTS.GRID_CARBON_INTENSITY;
+
+            return {
+                itPower, totalPower, pue, waterUsage, energyCost, waterCost, totalCost, carbonEmissions
+            };
+        }
+
+        // Calculate metrics for Hybrid DC
+        function calculateHybridMetrics(state) {
+            // IT Power (with IPTS reduction)
+            const itPowerIPTS = CONSTANTS.BASE_IT_POWER_PER_LOAD * state.itLoad * (1 - state.iptsEfficiency * 0.5); // IPTS reduces IT power draw slightly
+            const otherPowerHybrid = itPowerIPTS * CONSTANTS.TRAD_OTHER_PERCENT_OF_IT * (1 - state.iptsEfficiency * 0.5); // IPTS reduces other losses
+
+            const baseCoolingNeed = itPowerIPTS * CONSTANTS.TRAD_COOLING_PERCENT_OF_IT; // Cooling need scales with IPTS IT power
+
+            // --- Hybrid Cooling Energy Calculation ---
+            let coolingPower = baseCoolingNeed * 0.8; // Base hybrid cooling power (e.g., efficient liquid cooling baseline)
+
+            // Contributions that reduce cooling power consumption
+            const coldSaving = state.partnerColdSupply * CONSTANTS.SEAR_COLD_MAX_SAVING_FACTOR * baseCoolingNeed; // Waste cold reduces need
+            const aariEffectiveness = (1 - state.humidity) * Math.max(0, (35 - state.ambientTemp) / 35); // AARI effectiveness based on env
+            const aariSaving = aariEffectiveness * baseCoolingNeed * CONSTANTS.AARI_EVAP_ENERGY_FACTOR; // AARI modes save energy
+            const heatExportBenefit = state.partnerHeatDemand * CONSTANTS.SEAR_HEAT_EXPORT_VALUE_FACTOR * baseCoolingNeed * 0.5; // Exporting heat reduces rejection power (scaled)
+
+             // Calculate actual cooling power consumption based on contributions
+             // This is a simplified interaction model: contributions reduce the *base* cooling power consumption
+             let hybridCoolingPowerConsumption = baseCoolingNeed * 0.8; // Start with efficient cooling baseline power
+             hybridCoolingPowerConsumption = Math.max(baseCoolingNeed * 0.05, hybridCoolingPowerConsumption - coldSaving - aariSaving - heatExportBenefit); // Subtract savings, ensure min power
+
+
+            // --- Hybrid Water Usage Calculation ---
+            const aariWaterHarvest = CONSTANTS.AARI_AWH_MAX_YIELD_FACTOR * state.humidity * Math.max(0, (35 - state.ambientTemp) / 35) * state.itLoad * 50; // Harvest scales with humidity, temp, load (arbitrary scaling factor 50)
+
+            let coolingWaterUse = 0;
+            // Simulate water usage based on AARI mode (simplified)
+            const temp = state.ambientTemp;
+            const humidity = state.humidity;
+            const waterHarvestAmount = aariWaterHarvest; // Use the calculated harvest amount
+            const coldSupplyAmount = coldSaving; // Use the calculated cold saving amount
+            const wasteHeatExportAmount = heatExportBenefit; // Use the calculated heat export benefit amount
+
+            let aariMode = 'Dry Cooling / Backup';
+            if (coldSupplyAmount > baseCoolingNeed * 0.4) {
+                 aariMode = 'Waste Cold Primary';
+                 coolingWaterUse = baseCoolingNeed * CONSTANTS.TRAD_WUE_BASELINE * 0.05; // Minimal water use
+             } else if (temp < 15 && humidity < 0.7) {
+                 aariMode = 'Free Cooling Primary';
+                 coolingWaterUse = baseCoolingNeed * CONSTANTS.TRAD_WUE_BASELINE * 0.05; // Minimal water use
+             } else if (humidity < 0.6 && waterHarvestAmount > baseCoolingNeed * 0.2) { // Need sufficient harvest
+                 aariMode = 'Evaporative (Harvested Water)';
+                 coolingWaterUse = baseCoolingNeed * CONSTANTS.TRAD_WUE_BASELINE * 0.6; // Evap uses water
+             } else if (humidity >= 0.6 && wasteHeatExportAmount > baseCoolingNeed * 0.3) { // Need sufficient heat for regen
+                 aariMode = 'Evaporative (Waste Heat Dehumidification)';
+                 coolingWaterUse = baseCoolingNeed * CONSTANTS.TRAD_WUE_BASELINE * 0.7; // Dehum + Evap uses water
+             } else {
+                 aariMode = 'Dry Cooling / Backup';
+                 coolingWaterUse = baseCoolingNeed * CONSTANTS.TRAD_WUE_BASELINE * 0.1; // Dry cooling uses some water (closed loop losses)
+             }
+            simulationState.aariCoolingMode = aariMode; // Update state for display
+
+            const netWaterUsage = Math.max(0, coolingWaterUse - aariWaterHarvest);
+
+
+            // --- Hybrid Total Power ---
+            const hybridTotalPower = itPowerIPTS + hybridCoolingPowerConsumption + otherPowerHybrid;
+            const hybridPUE = hybridTotalPower / itPowerIPTS;
+
+
+            // --- Hybrid Costs ---
+            const renewablePowerGenerated = CONSTANTS.RENEWABLE_MAX_POWER_FACTOR * state.renewableAvailability * CONSTANTS.BASE_IT_POWER_PER_LOAD;
+            const netPowerFromGrid = hybridTotalPower - renewablePowerGenerated;
+            const hybridEnergyCost = Math.max(0, netPowerFromGrid) * CONSTANTS.ELECTRICITY_COST_PER_KWH;
+            const searHeatExportValue = calculateFlowValue('Heat Out (SEAR)', state); // Value of exported heat
+            const searColdValue = calculateFlowValue('Cold In (SEAR)', state); // Value of waste cold
+
+            const hybridWaterCost = netWaterUsage * CONSTANTS.WATER_COST_PER_LITER;
+            const hybridTotalCost = hybridEnergyCost + hybridWaterCost - searHeatExportValue - searColdValue; // Subtract value from SEAR
+
+
+            // --- Hybrid Carbon Emissions ---
+            const hybridGridCarbon = Math.max(0, netPowerFromGrid) * CONSTANTS.GRID_CARBON_INTENSITY;
+            const hybridRenewableCarbon = renewablePowerGenerated * CONSTANTS.RENEWABLE_CARBON_INTENSITY;
+            const wasteCarbonBenefit = (coldSaving + heatExportBenefit) * CONSTANTS.WASTE_CARBON_FACTOR / CONSTANTS.BASE_IT_POWER_PER_LOAD; // Benefit from waste use (scaled)
+
+            const hybridTotalCarbon = hybridGridCarbon + hybridRenewableCarbon + wasteCarbonBenefit;
+
+
+            // --- Global Optimization Impact (Applied as final reduction on Hybrid metrics) ---
+            const goEnergySavingFactor = state.globalOptInfluence * CONSTANTS.GO_MAX_ENERGY_SAVING;
+            const goWaterSavingFactor = state.globalOptInfluence * CONSTANTS.GO_MAX_WATER_SAVING;
+            const goCarbonSavingFactor = state.globalOptInfluence * CONSTANTS.GO_MAX_CARBON_SAVING;
+
+            // Simulate GO routing decision
+            let routing = 'Local Processing';
+             const energyPrice = (state.ambientTemp + state.humidity * 10) * (1 - state.renewableAvailability * 0.8); // Simulate higher price with high temp/humidity and low renewables
+             const remoteEfficiencyBenefit = (state.partnerColdSupply * 0.5 + state.partnerHeatDemand * 0.3) * (1 - energyPrice / 20); // Simulate benefit from partners and lower price elsewhere
+
+             if (remoteEfficiencyBenefit > 3 && state.itLoad > 0.3 && state.globalOptInfluence > 0.5) { // Only route if benefit is significant and GO is influential
+                  routing = 'Routing to Optimized Site'; // Simulate routing workloads away
+              } else {
+                  routing = 'Local Processing'; // Simulate processing locally
+              }
+             simulationState.globalOptRouting = routing; // Update state for display
+
+
+            const finalHybridTotalPower = hybridTotalPower * (1 - goEnergySavingFactor);
+            const finalHybridNetWaterUsage = netWaterUsage * (1 - goWaterSavingFactor);
+            const finalHybridTotalCarbon = hybridTotalCarbon * (1 - goCarbonSavingFactor);
+             const finalHybridTotalCost = hybridTotalCost * (1 - goEnergySavingFactor * 0.5); // GO also impacts cost
+
+
+            // --- Energy Source Mix Calculation (for Pie Chart) ---
+            const totalEnergyMixInput = renewablePowerGenerated + Math.max(0, netPowerFromGrid) + coldSaving + heatExportBenefit; // Sum of inputs/exports for mix
+            const energyMix = {
+                 renewable: (renewablePowerGenerated / Math.max(1, totalEnergyMixInput)) * 100,
+                 grid: (Math.max(0, netPowerFromGrid) / Math.max(1, totalEnergyMixInput)) * 100,
+                 wasteCold: (coldSaving / Math.max(1, totalEnergyMixInput)) * 100, // Representing cooling energy contribution
+                 wasteHeat: (heatExportBenefit / Math.max(1, totalEnergyMixInput)) * 100 // Representing exported energy value
+            };
+
+
+            // --- Cooling Energy Breakdown Calculation (for Bar Chart) ---
+             const coolingBreakdown = {
+                 baseNeed: baseCoolingNeed,
+                 coldContrib: coldSaving,
+                 aariContrib: aariSaving,
+                 heatExportBenefit: heatExportBenefit * 0.5 // Scaled benefit for breakdown chart
+             };
+
+
+            return {
+                traditional: calculateTraditionalMetrics(state),
+                hybrid: {
+                    itPower: itPowerIPTS,
+                    coolingPower: hybridCoolingPowerConsumption,
+                    otherPower: otherPowerHybrid,
+                    totalPower: hybridTotalPower,
+                    pue: hybridPUE,
+                    waterUsage: netWaterUsage,
+                    energyCost: hybridEnergyCost,
+                    waterCost: hybridWaterCost,
+                    totalCost: hybridTotalCost,
+                    carbonEmissions: hybridTotalCarbon,
+                    finalTotalPower: finalHybridTotalPower,
+                    finalWaterUsage: finalHybridNetWaterUsage,
+                    finalTotalCarbon: finalHybridTotalCarbon,
+                    finalTotalCost: finalHybridTotalCost,
+                    energyMix,
+                    coolingBreakdown,
+                    aariMode: simulationState.aariCoolingMode,
+                    goRouting: simulationState.globalOptRouting
+                }
+            };
+        }
+
+         // Calculate the simulated value of a flow (arbitrary units for charts)
+         function calculateFlowValue(type, state) {
+             const itPower = CONSTANTS.BASE_IT_POWER_PER_LOAD * state.itLoad;
+             const baseCoolingNeed = itPower * CONSTANTS.TRAD_COOLING_PERCENT_OF_IT;
+
+             switch(type) {
+                 case 'Heat Out (SEAR)':
+                     const availableHeat = itPower * 0.95;
+                     return Math.min(availableHeat, state.partnerHeatDemand * baseCoolingNeed * 2) * CONSTANTS.SEAR_HEAT_EXPORT_VALUE_FACTOR;
+                 case 'Cold In (SEAR)':
+                     const coolingNeedAdjusted = baseCoolingNeed * (1 + state.humidity * 0.3 + (state.ambientTemp - 20) * 0.01);
+                     return Math.min(coolingNeedAdjusted * 0.8, state.partnerColdSupply * baseCoolingNeed * 1.5) * CONSTANTS.SEAR_COLD_MAX_SAVING_FACTOR;
+                 default: return 0;
+             }
+         }
+
+
+        // Update all metrics and charts
+        function updateDashboard() {
+            const state = simulationState;
+            const metrics = calculateHybridMetrics(state); // Calculate all metrics
+
+            // --- Update Metrics Display (Hybrid) ---
+            metricElements.simulatedPUE.textContent = isNaN(metrics.hybrid.pue) || !isFinite(metrics.hybrid.pue) ? '--' : metrics.hybrid.pue.toFixed(2);
+            metricElements.simulatedNetGridEnergy.textContent = metrics.hybrid.finalTotalPower.toFixed(1) + ' kW'; // Display final power
+            metricElements.simulatedWaterUsage.textContent = metrics.hybrid.finalWaterUsage.toFixed(1) + ' Liters/hr'; // Display final water usage
+            metricElements.simulatedCarbonIntensity.textContent = metrics.hybrid.finalTotalCarbon.toFixed(2) + ' kgCO2/hr'; // Display final carbon
+            metricElements.aariCoolingMode.textContent = metrics.hybrid.aariMode;
+            metricElements.globalOptRouting.textContent = metrics.hybrid.goRouting;
+
+
+            // --- Update Comparison Charts ---
+            energyComparisonChart.data.datasets[0].data = [metrics.traditional.totalPower, metrics.hybrid.finalTotalPower];
+            energyComparisonChart.update();
+
+             costComparisonChart.data.datasets[0].data = [metrics.traditional.totalCost, metrics.hybrid.finalTotalCost];
+             costComparisonChart.update();
+
+             waterComparisonChart.data.datasets[0].data = [metrics.traditional.waterUsage, metrics.hybrid.finalWaterUsage];
+             waterComparisonChart.update();
+
+             carbonComparisonChart.data.datasets[0].data = [metrics.traditional.carbonEmissions, metrics.hybrid.finalTotalCarbon];
+             carbonComparisonChart.update();
+
+
+            // --- Update Hybrid Specific Charts ---
+            energyMixChart.data.datasets[0].data = [
+                metrics.hybrid.energyMix.renewable,
+                metrics.hybrid.energyMix.grid,
+                metrics.hybrid.energyMix.wasteCold,
+                metrics.hybrid.energyMix.wasteHeat
+            ];
+            energyMixChart.update();
+
+             coolingBreakdownChart.data.datasets[0].data = [
+                 metrics.hybrid.coolingBreakdown.baseNeed,
+                 -metrics.hybrid.coolingBreakdown.coldContrib, // Negative to show reduction
+                 -metrics.hybrid.coolingBreakdown.aariContrib, // Negative to show reduction
+                 -metrics.hybrid.coolingBreakdown.heatExportBenefit // Negative to show reduction
+             ];
+             coolingBreakdownChart.update();
+        }
+
+        // --- Event Listeners ---
+        Object.keys(sliders).forEach(key => {
+            sliders[key].addEventListener('input', (e) => {
+                // Update state based on slider type
+                if (key === 'itLoad' || key === 'humidity' || key === 'globalOptInfluence' || key === 'partnerColdSupply' || key === 'partnerHeatDemand' || key === 'renewableAvailability') {
+                    simulationState[key] = parseFloat(e.target.value) / 100;
+                    valueSpans[key].textContent = e.target.value + '%';
+                } else if (key === 'ambientTemp') {
+                    simulationState[key] = parseFloat(e.target.value);
+                    valueSpans[key].textContent = e.target.value + '°C';
+                } else if (key === 'iptsEfficiency') {
+                     simulationState[key] = parseFloat(e.target.value) / 100; // Convert percentage to decimal
+                     valueSpans[key].textContent = e.target.value + '%';
+                }
+                updateDashboard(); // Update dashboard on every input
+            });
+             // Set initial value display
+             if (key === 'itLoad' || key === 'humidity' || key === 'globalOptInfluence' || key === 'partnerColdSupply' || key === 'partnerHeatDemand' || key === 'renewableAvailability') {
+                 valueSpans[key].textContent = sliders[key].value + '%';
+             } else if (key === 'ambientTemp') {
+                 valueSpans[key].textContent = sliders[key].value + '°C';
+             } else if (key === 'iptsEfficiency') {
+                  valueSpans[key].textContent = sliders[key].value + '%';
+             }
+        });
+
+
+        // --- Initialization ---
+        function initDashboard() {
+            initializeCharts();
+            updateDashboard(); // Initial dashboard update
+        }
+
+        // Run initialization
+        initDashboard();
+
+    </script>
+
+</body>
+</html>
